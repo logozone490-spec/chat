@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LingoLink | Connect With The World</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+        }
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .chat-bubble-user {
+            background-color: #4f46e5;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble-partner {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col text-slate-900 bg-slate-50 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Navigation Header -->
+    <nav class="flex justify-between items-center px-6 lg:px-12 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 transition-all">
+        <div onclick="navigateTo('landing')" class="text-2xl font-black text-indigo-600 flex items-center gap-2 cursor-pointer select-none">
+            <span class="text-3xl bg-indigo-100 p-2 rounded-xl">🌐</span>
+            <span class="tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">LingoLink</span>
+        </div>
+
+        <!-- Dynamic Nav Links -->
+        <div id="nav-actions" class="flex items-center gap-3">
+            <!-- Populated via JS based on login state -->
+        </div>
+    </nav>
+
+    <!-- Main Content Views -->
+    <main class="flex-1 flex flex-col relative overflow-x-hidden">
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed top-20 right-6 z-50 transform translate-x-full transition-transform duration-300 ease-out bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 pointer-events-none">
+            <span id="toast-icon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></span>
+            <span id="toast-msg" class="text-sm font-medium">Notification message</span>
+        </div>
+
+        <!-- 1. LANDING PAGE -->
+        <section id="landing" class="page-view flex-1 flex flex-col">
+            <div class="container mx-auto px-6 py-12 md:py-20 text-center flex-1 flex flex-col justify-center items-center">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-semibold mb-6 animate-pulse">
+                    <i class="fa-solid fa-sparkles text-indigo-500"></i> The #1 Language Exchange Community
+                </span>
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 tracking-tight max-w-4xl">
+                    Practice Languages. <span class="bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-500 bg-clip-text text-transparent">Meet People.</span> <br>
+                    Connect With The World.
+                </h1>
+                <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl font-normal leading-relaxed">
+                    Find native speakers from around the world and exchange language skills through real-time interactive conversations and direct practice.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 w-full sm:w-auto">
+                    <button onclick="startGetStarted()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-lg font-bold transition-all shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Create Account
+                    </button>
+                    <button onclick="loginAsDemoUser()" class="px-8 py-4 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl text-lg font-bold transition-all shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-500"></i> Explore as Guest / Demo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <section class="bg-white py-16 border-t border-slate-200/80">
+                <div class="container mx-auto px-6 grid md:grid-cols-3 gap-8">
+                    <div class="p-8 rounded-3xl bg-slate-50/70 border border-slate-100 hover:border-indigo-300 transition-all shadow-sm">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-comments"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Real Conversations</h3>
+                        <p class="text-slate-600 leading-relaxed">Move beyond textbooks. Practice speaking, writing, and slang with authentic native speakers.</p>
+                    </div>
+                    <div class="p-8 rounded-3xl bg-slate-50/70 border border-slate-100 hover:border-indigo-300 transition-all shadow-sm">
+                        <div class="w-12 h-12 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-earth-americas"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Global Network</h3>
+                        <p class="text-slate-600 leading-relaxed">Connect with friendly learners across all continents and discover diverse cultures firsthand.</p>
+                    </div>
+                    <div class="p-8 rounded-3xl bg-slate-50/70 border border-slate-100 hover:border-indigo-300 transition-all shadow-sm">
+                        <div class="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center text-2xl mb-6"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h3 class="text-xl font-bold mb-2">Smart Matchmaking</h3>
+                        <p class="text-slate-600 leading-relaxed">Our algorithm pairs you with partners whose native language matches your learning goals and shared interests.</p>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- 2. ONBOARDING FLOW PAGE -->
+        <section id="onboarding" class="page-view hidden flex-1 flex items-center justify-center p-4 sm:p-6 bg-slate-100">
+            <div class="bg-white w-full max-w-2xl rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden my-auto">
+                
+                <!-- Onboarding Header & Progress Bar -->
+                <div class="bg-slate-50 px-8 py-6 border-b border-slate-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Setup Your Profile</span>
+                        <span id="step-indicator" class="text-xs font-semibold text-slate-500">Step 1 of 4</span>
+                    </div>
+                    <div class="h-2 bg-slate-200 w-full rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-indigo-600 transition-all duration-500 rounded-full" style="width: 25%;"></div>
+                    </div>
+                </div>
+                
+                <div class="p-6 sm:p-10">
+                    <!-- Step 1: Native Language -->
+                    <div id="step1" class="step active">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2 text-slate-900">What is your native language?</h2>
+                        <p class="text-slate-500 mb-6 text-sm sm:text-base">This helps us match you with learners who want to practice your native language.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64 overflow-y-auto pr-1" id="native-langs"></div>
+                    </div>
+
+                    <!-- Step 2: Learning Languages -->
+                    <div id="step2" class="step">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2 text-slate-900">What are you learning?</h2>
+                        <p class="text-slate-500 mb-6 text-sm sm:text-base">Select the language(s) you wish to practice or master.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64 overflow-y-auto pr-1" id="learning-langs"></div>
+                    </div>
+
+                    <!-- Step 3: Proficiency Level -->
+                    <div id="step3" class="step">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2 text-slate-900">Your proficiency level</h2>
+                        <p class="text-slate-500 mb-6 text-sm sm:text-base">Be accurate so we can match you with partners at a suitable pace.</p>
+                        <div class="space-y-3" id="levels"></div>
+                    </div>
+
+                    <!-- Step 4: Interests & Bio -->
+                    <div id="step4" class="step">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-2 text-slate-900">Tell us more about you</h2>
+                        <p class="text-slate-500 mb-6 text-sm sm:text-base">Shared interests make conversations natural and exciting!</p>
+                        
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Interests</label>
+                            <div class="flex flex-wrap gap-2" id="interests"></div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Short Bio</label>
+                            <textarea id="bio-input" class="w-full p-4 rounded-2xl border-2 border-slate-200 focus:border-indigo-600 focus:ring-0 outline-none transition text-sm resize-none" rows="3" placeholder="e.g. Computer Science student from Cairo. Love cinema and tech!"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step Navigation Buttons -->
+                    <div class="flex justify-between items-center mt-8 pt-6 border-t border-slate-100">
+                        <button id="prevBtn" onclick="changeStep(-1)" class="px-6 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition invisible flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button id="nextBtn" onclick="changeStep(1)" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-100 flex items-center gap-2">
+                            Continue <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. DASHBOARD / MATCHING FEED PAGE -->
+        <section id="dashboard" class="page-view hidden flex-1 flex flex-col bg-slate-100">
+            <div class="container mx-auto px-4 sm:px-6 py-8 flex-1 flex flex-col">
+                
+                <!-- Search & Filters Toolbar -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <!-- Search Input -->
+                    <div class="relative w-full md:w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" oninput="filterPartners()" placeholder="Search by bio or interest..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Filter Options -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <select id="filter-native" onchange="filterPartners()" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:border-indigo-500">
+                            <option value="">Native Language: All</option>
+                        </select>
+                        <select id="filter-learning" onchange="filterPartners()" class="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:border-indigo-500">
+                            <option value="">Learning: All</option>
+                        </select>
+                        <button onclick="resetFilters()" class="p-2.5 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-rotate-right"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Match List Container -->
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                            <span>Language Exchange Partners</span>
+                            <span id="partner-count" class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">0</span>
+                        </h2>
+                    </div>
+
+                    <!-- Partner Cards Grid -->
+                    <div id="partners-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="no-partners" class="hidden text-center py-16 bg-white rounded-3xl border border-dashed border-slate-300">
+                        <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                            <i class="fa-solid fa-user-slash"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">No matching partners found</h3>
+                        <p class="text-slate-500 text-sm max-w-sm mx-auto mb-4">Try relaxing your search terms or filters to discover more language learners.</p>
+                        <button onclick="resetFilters()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition">Clear Filters</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. INTERACTIVE CHAT INTERFACE -->
+        <section id="chat" class="page-view hidden flex-1 flex bg-slate-100 h-[calc(100vh-73px)]">
+            <div class="container mx-auto p-2 sm:p-6 flex-1 flex gap-6 h-full max-w-6xl">
+                
+                <!-- Chat Workspace Card -->
+                <div class="bg-white w-full rounded-3xl shadow-md border border-slate-200 flex flex-col overflow-hidden">
+                    
+                    <!-- Chat Active Header -->
+                    <div class="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-white z-10">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navigateTo('dashboard')" class="sm:hidden p-2 text-slate-500 hover:text-slate-800">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                            <div id="chat-partner-avatar" class="w-11 h-11 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-lg shadow-md shadow-indigo-100">
+                                P
+                            </div>
+                            <div>
+                                <h3 id="chat-partner-name" class="font-bold text-slate-900 text-base leading-tight">Partner Name</h3>
+                                <div id="chat-partner-details" class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                                    <span>Native: Spanish</span> • <span>Learning: English</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Controls -->
+                        <div class="flex items-center gap-2">
+                            <button onclick="openPartnerProfileModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-id-card"></i> <span class="hidden sm:inline">View Profile</span>
+                            </button>
+                            <button onclick="navigateTo('dashboard')" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                                <i class="fa-solid fa-xmark text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages List Area -->
+                    <div id="chat-messages" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/60">
+                        <!-- Dynamic Messages loaded here -->
+                    </div>
+
+                    <!-- Chat Input Bar -->
+                    <div class="p-3 sm:p-4 bg-white border-t border-slate-200">
+                        <form id="chat-form" onsubmit="handleSendMessage(event)" class="flex items-center gap-2">
+                            <input type="text" id="chat-input" placeholder="Type a message in your target language..." autocomplete="off" class="flex-1 px-4 py-3 bg-slate-100 focus:bg-white rounded-2xl border border-transparent focus:border-indigo-500 text-sm outline-none transition">
+                            <button type="submit" class="w-11 h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl flex items-center justify-center font-bold transition shadow-md shadow-indigo-200 shrink-0">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- PARTNER PROFILE MODAL -->
+        <div id="profile-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+                <div class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative">
+                    <button onclick="closePartnerProfileModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <div class="flex items-center gap-4">
+                        <div id="modal-avatar" class="w-16 h-16 rounded-2xl bg-white text-indigo-600 text-2xl font-black flex items-center justify-center shadow-lg">
+                            U
+                        </div>
+                        <div>
+                            <h3 id="modal-name" class="text-xl font-bold">User Name</h3>
+                            <p id="modal-level" class="text-xs text-indigo-100 bg-white/20 px-2.5 py-0.5 rounded-full inline-block mt-1 font-medium">Intermediate</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Native</span>
+                            <span id="modal-native" class="text-sm font-bold text-slate-800">English</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-slate-400 block">Learning</span>
+                            <span id="modal-learning" class="text-sm font-bold text-slate-800">Arabic</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">About</h4>
+                        <p id="modal-bio" class="text-sm text-slate-600 bg-slate-50 p-3.5 rounded-2xl leading-relaxed">No bio provided.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Interests</h4>
+                        <div id="modal-interests" class="flex flex-wrap gap-1.5">
+                            <!-- Populated JS -->
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button id="modal-chat-btn" onclick="" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition shadow-lg shadow-indigo-100 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-comment"></i> Start Conversation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Environment Fallback configurations
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'lingolink-app';
+        
+        // Supabase configuration - User URL / Public Key placeholder or provided environment
+        const SUPABASE_URL = "https://xyzexampleid.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummyKeyForPublicFallbackAuthAndStorage";
+
+        // Global Supabase Client
+        let supabaseClient = null;
+        try {
+            if (window.supabase && SUPABASE_URL && !SUPABASE_URL.includes("xyzexampleid")) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {
+            console.warn("Supabase initialized with in-memory fallback state mode.");
+        }
+
+        const LANGUAGES = ["Arabic", "English", "French", "Spanish", "German", "Italian", "Turkish", "Portuguese", "Russian", "Chinese", "Japanese", "Korean"];
+        const LEVELS = ["Beginner", "Elementary", "Intermediate", "Upper Intermediate", "Advanced", "Native"];
+        const INTERESTS = ["Movies", "Gaming", "Technology", "Football", "Cooking", "Travel", "Music", "Science", "Literature", "Art"];
+
+        // Current Application State
+        let currentUser = null; // Currently authenticated or active profile
+        let activeChatPartner = null;
+        let activeView = 'landing';
+
+        // Local Storage / State Fallback Mock Profiles for immediate interactivity
+        let mockPartners = [
+            {
+                id: 'partner-1',
+                name: 'Elena Rostova',
+                native_language: 'Spanish',
+                learning_languages: ['English', 'Arabic'],
+                proficiency_level: 'Intermediate',
+                interests: ['Movies', 'Travel', 'Cooking'],
+                bio: 'Hola! I am a graphic designer from Madrid. Looking to practice conversational English and basic Arabic!'
+            },
+            {
+                id: 'partner-2',
+                name: 'Kaito Tanaka',
+                native_language: 'Japanese',
+                learning_languages: ['English', 'German'],
+                proficiency_level: 'Advanced',
+                interests: ['Gaming', 'Technology', 'Music'],
+                bio: 'Software dev in Tokyo. Passionate about retro games and synth music. Let us exchange languages!'
+            },
+            {
+                id: 'partner-3',
+                name: 'Omar Al-Mansoor',
+                native_language: 'Arabic',
+                learning_languages: ['French', 'English'],
+                proficiency_level: 'Upper Intermediate',
+                interests: ['Literature', 'Football', 'Science'],
+                bio: 'Architecture student based in Cairo. Excited to connect with native French speakers for fluent discussion.'
+            },
+            {
+                id: 'partner-4',
+                name: 'Sophie Martin',
+                native_language: 'French',
+                learning_languages: ['Spanish', 'Arabic'],
+                proficiency_level: 'Beginner',
+                interests: ['Art', 'Movies', 'Travel'],
+                bio: 'Art historian from Paris traveling in Europe. Let us talk about cinema and books!'
+            }
+        ];
+
+        // Store chat conversations: key = partner.id -> array of message objects
+        let chatStore = {
+            'partner-1': [
+                { sender: 'partner', text: '¡Hola! How is your language practice going today?', time: '10:14 AM' }
+            ],
+            'partner-2': [
+                { sender: 'partner', text: 'Konnichiwa! Ready to practice Japanese?', time: '09:30 AM' }
+            ]
+        };
+
+        // Onboarding Form Temporary State
+        let onboardingState = {
+            native: 'Arabic',
+            learning: ['English'],
+            level: 'Intermediate',
+            interests: ['Technology', 'Movies'],
+            bio: ''
+        };
+        let currentStep = 1;
+
+        function navigateTo(viewId) {
+            activeView = viewId;
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('hidden');
+
+            renderNav();
+
+            if (viewId === 'dashboard') {
+                renderPartnersFeed();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderNav() {
+            const navActions = document.getElementById('nav-actions');
+            if (!navActions) return;
+
+            if (currentUser) {
+                navActions.innerHTML = `
+                    <button onclick="navigateTo('dashboard')" class="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-users"></i> Matches
+                    </button>
+                    <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md">
+                            ${currentUser.name.charAt(0)}
+                        </div>
+                        <span class="text-xs font-bold text-slate-800 hidden sm:inline">${currentUser.name}</span>
+                        <button onclick="logout()" class="p-2 text-slate-400 hover:text-rose-600 text-xs font-semibold transition" title="Logout">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                navActions.innerHTML = `
+                    <button onclick="navigateTo('landing')" class="px-4 py-2 text-slate-600 hover:text-indigo-600 text-sm font-semibold transition">Home</button>
+                    <button onclick="startGetStarted()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-bold transition shadow-md shadow-indigo-100">
+                        Get Started
+                    </button>
+                `;
+            }
+        }
+
+        function startGetStarted() {
+            currentStep = 1;
+            updateStepUI();
+            navigateTo('onboarding');
+        }
+
+        function changeStep(delta) {
+            currentStep += delta;
+            if (currentStep > 4) {
+                completeProfileAndSave();
+                return;
+            }
+            updateStepUI();
+        }
+
+        function updateStepUI() {
+            document.querySelectorAll('.step').forEach((s, i) => {
+                s.classList.toggle('active', i + 1 === currentStep);
+            });
+
+            // Update Progress Bar & Text
+            const bar = document.getElementById('progress-bar');
+            if (bar) bar.style.width = `${(currentStep / 4) * 100}%`;
+            
+            const stepInd = document.getElementById('step-indicator');
+            if (stepInd) stepInd.innerText = `Step ${currentStep} of 4`;
+
+            const prevBtn = document.getElementById('prevBtn');
+            if (prevBtn) prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+                nextBtn.innerHTML = currentStep === 4 
+                    ? 'Complete Profile <i class="fa-solid fa-check"></i>' 
+                    : 'Continue <i class="fa-solid fa-arrow-right"></i>';
+            }
+        }
+
+        function initOnboardingLists() {
+            // Native Language Options
+            const nativeDiv = document.getElementById('native-langs');
+            if (nativeDiv) {
+                nativeDiv.innerHTML = '';
+                LANGUAGES.forEach(l => {
+                    const isSelected = onboardingState.native === l;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `p-3.5 rounded-2xl border-2 text-left font-semibold text-xs sm:text-sm transition flex items-center justify-between ${isSelected ? 'border-indigo-600 bg-indigo-50/80 text-indigo-700' : 'border-slate-100 hover:border-indigo-200 text-slate-700'}`;
+                    btn.innerHTML = `<span>${l}</span> ${isSelected ? '<i class="fa-solid fa-circle-check text-indigo-600"></i>' : ''}`;
+                    btn.onclick = () => {
+                        onboardingState.native = l;
+                        initOnboardingLists();
+                    };
+                    nativeDiv.appendChild(btn);
+                });
+            }
+
+            // Learning Languages Options
+            const learningDiv = document.getElementById('learning-langs');
+            if (learningDiv) {
+                learningDiv.innerHTML = '';
+                LANGUAGES.forEach(l => {
+                    const isSelected = onboardingState.learning.includes(l);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `p-3.5 rounded-2xl border-2 text-left font-semibold text-xs sm:text-sm transition flex items-center justify-between ${isSelected ? 'border-indigo-600 bg-indigo-50/80 text-indigo-700' : 'border-slate-100 hover:border-indigo-200 text-slate-700'}`;
+                    btn.innerHTML = `<span>${l}</span> ${isSelected ? '<i class="fa-solid fa-square-check text-indigo-600"></i>' : ''}`;
+                    btn.onclick = () => {
+                        if (onboardingState.learning.includes(l)) {
+                            if (onboardingState.learning.length > 1) {
+                                onboardingState.learning = onboardingState.learning.filter(x => x !== l);
+                            }
+                        } else {
+                            onboardingState.learning.push(l);
+                        }
+                        initOnboardingLists();
+                    };
+                    learningDiv.appendChild(btn);
+                });
+            }
+
+            // Proficiency Levels
+            const levelDiv = document.getElementById('levels');
+            if (levelDiv) {
+                levelDiv.innerHTML = '';
+                LEVELS.forEach(lvl => {
+                    const isSelected = onboardingState.level === lvl;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `w-full p-3.5 rounded-2xl border-2 text-left font-semibold text-sm transition flex items-center justify-between ${isSelected ? 'border-indigo-600 bg-indigo-50/80 text-indigo-700' : 'border-slate-100 hover:border-indigo-200 text-slate-700'}`;
+                    btn.innerHTML = `<span>${lvl}</span> ${isSelected ? '<i class="fa-solid fa-circle-dot text-indigo-600"></i>' : ''}`;
+                    btn.onclick = () => {
+                        onboardingState.level = lvl;
+                        initOnboardingLists();
+                    };
+                    levelDiv.appendChild(btn);
+                });
+            }
+
+            // Interests
+            const interestDiv = document.getElementById('interests');
+            if (interestDiv) {
+                interestDiv.innerHTML = '';
+                INTERESTS.forEach(interest => {
+                    const isSelected = onboardingState.interests.includes(interest);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}`;
+                    btn.innerText = interest;
+                    btn.onclick = () => {
+                        if (onboardingState.interests.includes(interest)) {
+                            onboardingState.interests = onboardingState.interests.filter(i => i !== interest);
+                        } else {
+                            onboardingState.interests.push(interest);
+                        }
+                        initOnboardingLists();
+                    };
+                    interestDiv.appendChild(btn);
+                });
+            }
+        }
+
+        async function completeProfileAndSave() {
+            const bioText = document.getElementById('bio-input')?.value || "Language enthusiast excited to practice!";
+            
+            currentUser = {
+                id: 'user-' + Date.now(),
+                name: 'You (Learner)',
+                native_language: onboardingState.native,
+                learning_languages: onboardingState.learning,
+                proficiency_level: onboardingState.level,
+                interests: onboardingState.interests,
+                bio: bioText
+            };
+
+            // Attempt saving to Supabase if configured
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('profiles')
+                        .insert([
+                            {
+                                native_language: currentUser.native_language,
+                                learning_languages: currentUser.learning_languages,
+                                proficiency_level: currentUser.proficiency_level,
+                                interests: currentUser.interests,
+                                bio: currentUser.bio
+                            }
+                        ]);
+                    if (error) console.warn("Supabase Save Warning:", error);
+                } catch (e) {
+                    console.warn("Database storage error:", e);
+                }
+            }
+
+            showToast("Profile created successfully! Welcome to LingoLink.");
+            populateFilterOptions();
+            navigateTo('dashboard');
+        }
+
+        function loginAsDemoUser() {
+            currentUser = {
+                id: 'demo-user',
+                name: 'Alex Rivera',
+                native_language: 'English',
+                learning_languages: ['Spanish', 'French'],
+                proficiency_level: 'Intermediate',
+                interests: ['Movies', 'Gaming', 'Technology'],
+                bio: 'Passionate about languages, travel, and software engineering.'
+            };
+            showToast("Logged in as Demo User!");
+            populateFilterOptions();
+            navigateTo('dashboard');
+        }
+
+        function logout() {
+            currentUser = null;
+            showToast("Logged out successfully.");
+            navigateTo('landing');
+        }
+
+        function populateFilterOptions() {
+            const nativeSelect = document.getElementById('filter-native');
+            const learningSelect = document.getElementById('filter-learning');
+
+            if (nativeSelect) {
+                nativeSelect.innerHTML = '<option value="">Native Language: All</option>';
+                LANGUAGES.forEach(l => {
+                    nativeSelect.innerHTML += `<option value="${l}">${l}</option>`;
+                });
+            }
+
+            if (learningSelect) {
+                learningSelect.innerHTML = '<option value="">Learning: All</option>';
+                LANGUAGES.forEach(l => {
+                    learningSelect.innerHTML += `<option value="${l}">${l}</option>`;
+                });
+            }
+        }
+
+        function renderPartnersFeed() {
+            const grid = document.getElementById('partners-grid');
+            const noPartners = document.getElementById('no-partners');
+            const partnerCount = document.getElementById('partner-count');
+
+            if (!grid) return;
+
+            const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const nativeFilter = document.getElementById('filter-native')?.value || '';
+            const learningFilter = document.getElementById('filter-learning')?.value || '';
+
+            const filtered = mockPartners.filter(p => {
+                const matchesSearch = !searchQuery || 
+                    p.bio.toLowerCase().includes(searchQuery) || 
+                    p.name.toLowerCase().includes(searchQuery) ||
+                    p.interests.some(i => i.toLowerCase().includes(searchQuery));
+                
+                const matchesNative = !nativeFilter || p.native_language === nativeFilter;
+                const matchesLearning = !learningFilter || p.learning_languages.includes(learningFilter);
+
+                return matchesSearch && matchesNative && matchesLearning;
+            });
+
+            if (partnerCount) partnerCount.innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                if (noPartners) noPartners.classList.remove('hidden');
+                return;
+            }
+
+            if (noPartners) noPartners.classList.add('hidden');
+
+            grid.innerHTML = filtered.map(partner => `
+                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-black flex items-center justify-center text-lg shadow-md shadow-indigo-100">
+                                    ${partner.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 group-hover:text-indigo-600 transition">${partner.name}</h3>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full inline-block mt-0.5">${partner.proficiency_level}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Language Exchange Info -->
+                        <div class="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl mb-4 text-xs">
+                            <div>
+                                <span class="text-slate-400 font-bold uppercase text-[9px] block">Native</span>
+                                <span class="font-bold text-slate-800">${partner.native_language}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 font-bold uppercase text-[9px] block">Learning</span>
+                                <span class="font-bold text-slate-800">${partner.learning_languages.join(', ')}</span>
+                            </div>
+                        </div>
+
+                        <!-- Bio -->
+                        <p class="text-xs text-slate-600 mb-4 line-clamp-2 leading-relaxed">${partner.bio}</p>
+
+                        <!-- Interests Badges -->
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            ${partner.interests.map(i => `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-medium">${i}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+                        <button onclick="startChatWith('${partner.id}')" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-message"></i> Message
+                        </button>
+                        <button onclick="inspectPartnerProfile('${partner.id}')" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition" title="View Profile">
+                            <i class="fa-solid fa-user"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterPartners() {
+            renderPartnersFeed();
+        }
+
+        function resetFilters() {
+            const searchInput = document.getElementById('search-input');
+            const nativeFilter = document.getElementById('filter-native');
+            const learningFilter = document.getElementById('filter-learning');
+
+            if (searchInput) searchInput.value = '';
+            if (nativeFilter) nativeFilter.value = '';
+            if (learningFilter) learningFilter.value = '';
+
+            renderPartnersFeed();
+        }
+
+        function startChatWith(partnerId) {
+            if (!currentUser) {
+                showToast("Please create an account or use Demo mode first!", "warning");
+                navigateTo('onboarding');
+                return;
+            }
+
+            const partner = mockPartners.find(p => p.id === partnerId);
+            if (!partner) return;
+
+            activeChatPartner = partner;
+
+            // Header info
+            document.getElementById('chat-partner-name').innerText = partner.name;
+            document.getElementById('chat-partner-avatar').innerText = partner.name.charAt(0);
+            document.getElementById('chat-partner-details').innerHTML = `
+                <span>Native: <b>${partner.native_language}</b></span> • <span>Learning: <b>${partner.learning_languages.join(', ')}</b></span>
+            `;
+
+            // Render Messages
+            renderChatMessages();
+            navigateTo('chat');
+        }
+
+        function renderChatMessages() {
+            if (!activeChatPartner) return;
+            const chatBox = document.getElementById('chat-messages');
+            if (!chatBox) return;
+
+            const messages = chatStore[activeChatPartner.id] || [];
+
+            if (messages.length === 0) {
+                chatBox.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-hand-wave"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">Say hello to ${activeChatPartner.name}!</h4>
+                        <p class="text-xs text-slate-500 mt-1">Start exchanging languages by breaking the ice.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            chatBox.innerHTML = messages.map(msg => {
+                const isUser = msg.sender === 'user';
+                return `
+                    <div class="flex flex-col ${isUser ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[80%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm ${isUser ? 'chat-bubble-user shadow-sm' : 'chat-bubble-partner shadow-sm border border-slate-200/80'}">
+                            ${msg.text}
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 px-1">${msg.time}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleSendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            if (!input || !input.value.trim() || !activeChatPartner) return;
+
+            const userText = input.value.trim();
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (!chatStore[activeChatPartner.id]) {
+                chatStore[activeChatPartner.id] = [];
+            }
+
+            // Push User Message
+            chatStore[activeChatPartner.id].push({
+                sender: 'user',
+                text: userText,
+                time: now
+            });
+
+            input.value = '';
+            renderChatMessages();
+
+            // Auto-Reply Simulation for interactive feel
+            setTimeout(() => {
+                const replies = [
+                    `That sounds interesting! How do you say that in ${activeChatPartner.native_language}?`,
+                    `Great practice! Your grammar is looking good.`,
+                    `Thanks for sharing! What are your goals for learning ${activeChatPartner.learning_languages[0]}?`,
+                    `Awesome! Let us keep practicing.`
+                ];
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+                chatStore[activeChatPartner.id].push({
+                    sender: 'partner',
+                    text: randomReply,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                renderChatMessages();
+            }, 1200);
+        }
+
+        function inspectPartnerProfile(partnerId) {
+            const partner = mockPartners.find(p => p.id === partnerId);
+            if (!partner) return;
+
+            document.getElementById('modal-name').innerText = partner.name;
+            document.getElementById('modal-avatar').innerText = partner.name.charAt(0);
+            document.getElementById('modal-level').innerText = partner.proficiency_level;
+            document.getElementById('modal-native').innerText = partner.native_language;
+            document.getElementById('modal-learning').innerText = partner.learning_languages.join(', ');
+            document.getElementById('modal-bio').innerText = partner.bio || "No bio provided.";
+
+            const interestsContainer = document.getElementById('modal-interests');
+            if (interestsContainer) {
+                interestsContainer.innerHTML = partner.interests.map(i => `<span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold">${i}</span>`).join('');
+            }
+
+            const chatBtn = document.getElementById('modal-chat-btn');
+            if (chatBtn) {
+                chatBtn.onclick = () => {
+                    closePartnerProfileModal();
+                    startChatWith(partner.id);
+                };
+            }
+
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function openPartnerProfileModal() {
+            if (activeChatPartner) {
+                inspectPartnerProfile(activeChatPartner.id);
+            }
+        }
+
+        function closePartnerProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            const iconEl = document.getElementById('toast-icon');
+
+            if (!toast || !msgEl) return;
+
+            msgEl.innerText = message;
+            if (type === 'warning') {
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>';
+            } else {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            }
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        window.onload = function () {
+            initOnboardingLists();
+            populateFilterOptions();
+            renderNav();
+            navigateTo('landing');
+        };
+    </script>
+</body>
+</html>
